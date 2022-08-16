@@ -3,11 +3,11 @@ package com.satyam.security.service.config;
 import java.util.Arrays;
 
 import javax.annotation.Resource;
-import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,14 +22,8 @@ import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
 import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-
-/**
- * 
- * @author SKumar
- *
- */
+import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 
 /**
  * 
@@ -43,39 +37,38 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 	@Autowired
 	private AuthenticationManager authenticationManager;
 	@Autowired
-	private DataSource dataSource;
-	@Autowired
-	private PasswordEncoder encoder;
-	@Autowired
 	private WebResponseExceptionTranslator<OAuth2Exception> loggingExceptionTranslator;
 	@Resource(name = "userDetailsServiceImpl")
-	private UserDetailsService userDetailsService;
+	private UserDetailsService userService;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	@Override
 	public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-		clients.jdbc(dataSource).passwordEncoder(encoder);
+		clients.inMemory().withClient("solartopps").secret(passwordEncoder.encode("Texala@1234"))
+				.accessTokenValiditySeconds(20000).refreshTokenValiditySeconds(20000).authorities("USER")
+				.autoApprove(true).authorizedGrantTypes("password", "refresh_token").scopes("read", "write");
+
 	}
 
 	@Override
 	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-		security.tokenKeyAccess("permitAll()").checkTokenAccess("isAuthenticated()")
-				.allowFormAuthenticationForClients();
+		security.tokenKeyAccess("permitAll()").checkTokenAccess("isAuthenticated()");
 	}
 
 	@Override
 	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
 		TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
-		tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer()));
-		endpoints.tokenStore(tokenStore()).//accessTokenConverter(accessTokenConverter()).
-		tokenServices(defaultTokenServices()).
-		tokenEnhancer(tokenEnhancerChain).
-				authenticationManager(authenticationManager);//.userDetailsService(userDetailsService);
-
+		tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer(), accessTokenConverter()));
+		endpoints.tokenStore(tokenStore()).tokenEnhancer(tokenEnhancerChain)
+				.authenticationManager(authenticationManager);//.userDetailsService(userService);
 	}
 
 	@Bean
-	public TokenStore tokenStore() {
-		return new JdbcTokenStore(dataSource);
+	public JwtAccessTokenConverter accessTokenConverter() {
+		CustomJwtAccessTokenConverter accessTokenConverter = new CustomJwtAccessTokenConverter();
+		accessTokenConverter.setSigningKey("a1b2c3d4e5f6g");
+		return accessTokenConverter;
 	}
 
 	@Bean
@@ -84,19 +77,17 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 	}
 
 	@Bean
-	public JwtAccessTokenConverter accessTokenConverter() {
-		JwtAccessTokenConverter accessTokenConverter = new JwtAccessTokenConverter();
-		accessTokenConverter.setSigningKey("<signingKey>");
-		return accessTokenConverter;
+	public TokenStore tokenStore() {
+		return new JwtTokenStore(accessTokenConverter());
 	}
 
 	@Bean
-	public DefaultTokenServices defaultTokenServices() {
+	@Primary
+	public DefaultTokenServices tokenServices() {
 		DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
 		defaultTokenServices.setTokenStore(tokenStore());
 		defaultTokenServices.setSupportRefreshToken(true);
-		defaultTokenServices.setTokenEnhancer(tokenEnhancer());
 		return defaultTokenServices;
 	}
-	
+
 }
