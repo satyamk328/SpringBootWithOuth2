@@ -10,6 +10,6 @@ import com.satyam.authuser.model.User;
 @Repository
 public interface UserDao extends JpaRepository<User, Long> {
 	
-	Optional<User> findByEmail(String email);
+	Optional<User> findByEmailIgnoreCase(String email);
 	Optional<User> findByphone(String phone);
 }

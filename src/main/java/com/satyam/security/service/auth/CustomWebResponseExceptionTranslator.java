@@ -16,9 +16,9 @@ import org.springframework.security.oauth2.provider.error.WebResponseExceptionTr
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.stereotype.Component;
 
-import net.texala.common.request.model.RestCustom;
-import net.texala.common.request.model.RestResponse;
-import net.texala.common.request.model.RestStatus;
+import com.satyam.common.request.model.RestCustom;
+import com.satyam.common.request.model.RestResponse;
+import com.satyam.common.request.model.RestStatus;
 
 @Component
 public class CustomWebResponseExceptionTranslator implements WebResponseExceptionTranslator {

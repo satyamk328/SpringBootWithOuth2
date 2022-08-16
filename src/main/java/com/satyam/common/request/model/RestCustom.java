@@ -1,4 +1,4 @@
-package net.texala.common.request.model;
+package com.satyam.common.request.model;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;

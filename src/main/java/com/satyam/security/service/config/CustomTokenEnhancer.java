@@ -9,7 +9,7 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
-import com.satyam.authuser.model.User;
+import com.satyam.authuser.vo.UserProfileVo;
 
 /***
  * 
@@ -28,7 +28,7 @@ public class CustomTokenEnhancer extends JwtAccessTokenConverter implements Seri
 	}
 
 	private Map<String, Object> getAdditionalInfo(OAuth2Authentication oAuth2Authentication) {
-		User loginUser = (User) oAuth2Authentication.getPrincipal();
+		UserProfileVo loginUser = (UserProfileVo) oAuth2Authentication.getPrincipal();
 
 		final Map<String, Object> additionalInfo = new HashMap<>();
 		additionalInfo.put("authorities", loginUser.getAuthorities());

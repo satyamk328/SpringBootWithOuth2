@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.satyam.authuser.model.User;
 import com.satyam.authuser.service.UserService;
+import com.satyam.common.request.model.RestCustom;
+import com.satyam.common.request.model.RestResponse;
+import com.satyam.common.request.model.RestStatus;
 
 import lombok.extern.slf4j.Slf4j;
-import net.texala.common.request.model.RestCustom;
-import net.texala.common.request.model.RestResponse;
-import net.texala.common.request.model.RestStatus;
 
 @RestController
 @RequestMapping("/api")

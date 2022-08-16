@@ -18,10 +18,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.satyam.common.request.model.RestResponse;
+import com.satyam.common.request.model.RestStatus;
 
 import lombok.extern.slf4j.Slf4j;
-import net.texala.common.request.model.RestResponse;
-import net.texala.common.request.model.RestStatus;
 
 @Component
 @Slf4j

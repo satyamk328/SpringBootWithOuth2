@@ -1,0 +1,21 @@
+.metadata/*
+.sonarlint/*
+.project
+.classpath
+/.settings/
+/target/
+*/.settings/
+/.springBeans
+/.classpath
+/.project
+.idea/
+*.iml
+*.log
+**/dist/
+
+/catalina.base_IS_UNDEFINED/
+
+# Package Files #
+*.jar
+*.war
+*.ear

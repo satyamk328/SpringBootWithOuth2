@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.satyam.authuser.dao.UserDao;
 import com.satyam.authuser.model.User;
 import com.satyam.authuser.service.UserService;
+import com.satyam.authuser.vo.UserProfileVo;
 
 @Service(value = "userService")
 public class UserServiceImpl implements UserDetailsService, UserService {
@@ -20,18 +21,11 @@ public class UserServiceImpl implements UserDetailsService, UserService {
 	private UserDao userDao;
 
 	@Override
-	public UserDetails loadUserByUsername(final String username) {
-		User user = null;
-		if (username.matches("\\d{10}|(?:\\d{3}-){2}\\d{4}|\\(\\d{3}\\)\\d{3}-?\\d{4}")) {
-			user = this.userDao.findByphone(username)
-					.orElseThrow(() -> new UsernameNotFoundException("Invalid username or password."));
-		} else {
-			user = this.userDao.findByEmail(username)
-					.orElseThrow(() -> new UsernameNotFoundException("Invalid username or password."));
-		}
-		return user;
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		User user = this.userDao.findByEmailIgnoreCase(username).orElseThrow(
+				() -> new UsernameNotFoundException(String.format("User %s was not found in system", username)));
+		return UserProfileVo.build(user);
 	}
-
 
 	public List<User> findAll() {
 		List<User> list = new ArrayList<>();

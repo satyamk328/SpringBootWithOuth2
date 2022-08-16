@@ -1,15 +1,9 @@
 package com.satyam.security.service.config;
 
-import java.util.Arrays;
-
-import javax.sql.DataSource;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.event.EventListener;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
-import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
@@ -19,9 +13,8 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Aut
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.error.WebResponseExceptionTranslator;
 import org.springframework.security.oauth2.provider.token.TokenEnhancer;
-import org.springframework.security.oauth2.provider.token.TokenEnhancerChain;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
+import org.springframework.security.oauth2.provider.token.store.InMemoryTokenStore;
 
 /**
  * 
@@ -46,29 +39,10 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 	
 	@Autowired
 	private AuthenticationManager authenticationManager;
-
-	@Autowired
-	private DataSource dataSource;
-	
 	@Autowired
 	private PasswordEncoder passwordEncoder;
-
 	@Autowired
-	private WebResponseExceptionTranslator<OAuth2Exception> oauth2ResponseExceptionTranslator;
-
-	@Autowired
-	private TokenStore tokenStore;
-
-	@Autowired
-	private JwtAccessTokenConverter jwtAccessTokenConverter;
-
-	@Autowired
-	private TokenEnhancer jwtTokenEnhancer;
-
-	/*
-	 * @Override public void configure(ClientDetailsServiceConfigurer clients)
-	 * throws Exception { clients.jdbc(dataSource); }
-	 */
+	private WebResponseExceptionTranslator<OAuth2Exception> loggingExceptionTranslator;
 	
 	@Override
 	public void configure(ClientDetailsServiceConfigurer configurer) throws Exception {
@@ -80,30 +54,26 @@ public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdap
 	
 	@Override
 	public void configure(AuthorizationServerSecurityConfigurer security) throws Exception {
-		security.tokenKeyAccess("permitAll()").checkTokenAccess("isAuthenticated()");
+		security.tokenKeyAccess("permitAll()").checkTokenAccess("isAuthenticated()")
+				.allowFormAuthenticationForClients();
 	}
 
 	@Override
 	public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-		TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
-		tokenEnhancerChain.setTokenEnhancers(Arrays.asList(jwtTokenEnhancer, jwtAccessTokenConverter));
-		endpoints.tokenStore(tokenStore).tokenEnhancer(tokenEnhancerChain).authenticationManager(authenticationManager)
-				.exceptionTranslator(oauth2ResponseExceptionTranslator);
+
+		endpoints.authenticationManager(authenticationManager)// .tokenEnhancer(tokenEnhancerChain)
+				.tokenStore(tokenStore()).exceptionTranslator(loggingExceptionTranslator);
 
 	}
 
-	@EventListener
-	public void authSuccessEventListener(AuthenticationSuccessEvent authorizedEvent) {
-		// write custom code here for login success audit
-		System.out.println("User Oauth2 login success");
-		System.out.println("This is success event : " + authorizedEvent.getAuthentication().getPrincipal());
+	@Bean
+	public TokenStore tokenStore() {
+		return new InMemoryTokenStore();
 	}
 
-	@EventListener
-	public void authFailedEventListener(AbstractAuthenticationFailureEvent oAuth2AuthenticationFailureEvent) {
-		// write custom code here login failed audit.
-		System.out.println("User Oauth2 login Failed");
-		System.out.println(oAuth2AuthenticationFailureEvent.getAuthentication().getPrincipal());
+	@Bean
+	public TokenEnhancer jwtTokenEnhancer() {
+		return new CustomTokenEnhancer();
 	}
 
 }
